@@ -7,8 +7,10 @@ static void sigint_handler(int sig) {
     (void)sig;
     if (g_sh && g_sh->fg_pgid > 0)
         kill(-g_sh->fg_pgid, SIGINT);
-    else if (g_sh && g_sh->interactive)
-        (void)write(STDOUT_FILENO, "\n", 1);
+    else if (g_sh && g_sh->interactive) {
+        ssize_t n = write(STDOUT_FILENO, "\n", 1);
+        (void)n;
+    }
 }
 
 static void sigchld_handler(int sig) {
