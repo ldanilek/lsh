@@ -3,7 +3,7 @@
 
 #include <lsh/lexer.h>
 
-AstNode *parse(const char *input);
-char *parse_error(void);
+AstNode* parse(const char* input);
+char* parse_error(void);
 
 #endif

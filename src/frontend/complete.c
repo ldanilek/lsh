@@ -2,25 +2,24 @@
 #include <lsh/builtin.h>
 #include <sys/stat.h>
 
-static const char *extra_commands[] = {
-    "jobs", "fg", "bg", NULL
-};
+static const char* extra_commands[] = {
+    "jobs", "fg", "bg", NULL};
 
-static int has_prefix(const char *prefix, const char *name) {
+static int has_prefix(const char* prefix, const char* name) {
     if (!prefix[0]) return 1;
     return strncmp(prefix, name, strlen(prefix)) == 0;
 }
 
-static void list_add(CompletionList *list, const char *item) {
+static void list_add(CompletionList* list, const char* item) {
     for (int i = 0; i < list->count; i++) {
         if (strcmp(list->items[i], item) == 0)
             return;
     }
-    list->items = realloc(list->items, (size_t)(list->count + 1) * sizeof(char *));
+    list->items = realloc(list->items, (size_t)(list->count + 1) * sizeof(char*));
     list->items[list->count++] = strdup(item);
 }
 
-void completion_free(CompletionList *list) {
+void completion_free(CompletionList* list) {
     if (!list) return;
     for (int i = 0; i < list->count; i++)
         free(list->items[i]);
@@ -29,7 +28,7 @@ void completion_free(CompletionList *list) {
     list->count = 0;
 }
 
-static int is_command_position(const char *line, int word_start) {
+static int is_command_position(const char* line, int word_start) {
     int i = word_start - 1;
     while (i >= 0 && (line[i] == ' ' || line[i] == '\t')) i--;
     if (i < 0) return 1;
@@ -39,15 +38,15 @@ static int is_command_position(const char *line, int word_start) {
     return 0;
 }
 
-static int path_is_executable(const char *path) {
+static int path_is_executable(const char* path) {
     struct stat st;
     if (stat(path, &st) < 0) return 0;
     return S_ISREG(st.st_mode) && (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH));
 }
 
-static void gather_commands(const char *prefix, CompletionList *out) {
+static void gather_commands(const char* prefix, CompletionList* out) {
     for (int i = 0; i < builtin_count(); i++) {
-        const char *name = builtin_name(i);
+        const char* name = builtin_name(i);
         if (name && has_prefix(prefix, name))
             list_add(out, name);
     }
@@ -56,18 +55,18 @@ static void gather_commands(const char *prefix, CompletionList *out) {
             list_add(out, extra_commands[i]);
     }
 
-    const char *path_env = getenv("PATH");
+    const char* path_env = getenv("PATH");
     if (!path_env) return;
 
     char path_copy[4096];
     strncpy(path_copy, path_env, sizeof(path_copy) - 1);
     path_copy[sizeof(path_copy) - 1] = '\0';
 
-    char *dir = strtok(path_copy, ":");
+    char* dir = strtok(path_copy, ":");
     while (dir) {
-        DIR *d = opendir(dir);
+        DIR* d = opendir(dir);
         if (d) {
-            struct dirent *ent;
+            struct dirent* ent;
             while ((ent = readdir(d))) {
                 if (ent->d_name[0] == '.') continue;
                 if (!has_prefix(prefix, ent->d_name)) continue;
@@ -82,15 +81,15 @@ static void gather_commands(const char *prefix, CompletionList *out) {
     }
 }
 
-static void expand_tilde(const char *word, char *out, size_t outsz) {
+static void expand_tilde(const char* word, char* out, size_t outsz) {
     if (word[0] != '~') {
         strncpy(out, word, outsz - 1);
         out[outsz - 1] = '\0';
         return;
     }
-    const char *home = getenv("HOME");
+    const char* home = getenv("HOME");
     if (!home) {
-        struct passwd *pw = getpwuid(getuid());
+        struct passwd* pw = getpwuid(getuid());
         home = pw ? pw->pw_dir : "";
     }
     if (word[1] == '\0' || word[1] == '/') {
@@ -101,13 +100,13 @@ static void expand_tilde(const char *word, char *out, size_t outsz) {
     }
 }
 
-static void gather_paths(const char *word, CompletionList *out) {
+static void gather_paths(const char* word, CompletionList* out) {
     char expanded[PATH_MAX];
     expand_tilde(word, expanded, sizeof(expanded));
 
     char dir[PATH_MAX];
     char base[PATH_MAX];
-    const char *slash = strrchr(expanded, '/');
+    const char* slash = strrchr(expanded, '/');
     if (!slash) {
         strcpy(dir, ".");
         strncpy(base, expanded, sizeof(base) - 1);
@@ -131,11 +130,11 @@ static void gather_paths(const char *word, CompletionList *out) {
         base[0] = '\0';
     }
 
-    DIR *d = opendir(dir[0] ? dir : ".");
+    DIR* d = opendir(dir[0] ? dir : ".");
     if (!d) return;
 
     size_t word_dir_len = slash ? (size_t)(slash - word + 1) : 0;
-    struct dirent *ent;
+    struct dirent* ent;
     while ((ent = readdir(d))) {
         if (ent->d_name[0] == '.' && base[0] != '.') continue;
         if (!has_prefix(base, ent->d_name)) continue;
@@ -167,8 +166,8 @@ static void gather_paths(const char *word, CompletionList *out) {
     closedir(d);
 }
 
-int completion_gather(Shell *sh, const char *line, int word_start, int word_end,
-                      CompletionList *out) {
+int completion_gather(Shell* sh, const char* line, int word_start, int word_end,
+                      CompletionList* out) {
     (void)sh;
     out->items = NULL;
     out->count = 0;
@@ -187,7 +186,7 @@ int completion_gather(Shell *sh, const char *line, int word_start, int word_end,
     return out->count;
 }
 
-char *completion_common_prefix(CompletionList *list) {
+char* completion_common_prefix(CompletionList* list) {
     if (list->count == 0) return strdup("");
     size_t len = strlen(list->items[0]);
     for (int i = 1; i < list->count; i++) {
@@ -196,7 +195,7 @@ char *completion_common_prefix(CompletionList *list) {
             j++;
         len = j;
     }
-    char *out = malloc(len + 1);
+    char* out = malloc(len + 1);
     memcpy(out, list->items[0], len);
     out[len] = '\0';
     return out;

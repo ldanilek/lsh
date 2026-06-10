@@ -1,7 +1,7 @@
 #include <lsh/expand.h>
 #include <lsh/vars.h>
 
-static int match_pattern(const char *pat, const char *str) {
+static int match_pattern(const char* pat, const char* str) {
     if (!*pat) return !*str;
     if (*pat == '*') {
         if (match_pattern(pat + 1, str)) return 1;
@@ -15,19 +15,19 @@ static int match_pattern(const char *pat, const char *str) {
     return 0;
 }
 
-void glob_expand(const char *pattern, char ***out, int *out_count) {
+void glob_expand(const char* pattern, char*** out, int* out_count) {
     *out = NULL;
     *out_count = 0;
 
     if (!strchr(pattern, '*') && !strchr(pattern, '?')) {
-        *out = malloc(sizeof(char *));
+        *out = malloc(sizeof(char*));
         (*out)[0] = strdup(pattern);
         *out_count = 1;
         return;
     }
 
     char dir[PATH_MAX];
-    const char *base = strrchr(pattern, '/');
+    const char* base = strrchr(pattern, '/');
     if (base) {
         size_t dlen = (size_t)(base - pattern);
         if (dlen >= sizeof(dir)) dlen = sizeof(dir) - 1;
@@ -39,17 +39,17 @@ void glob_expand(const char *pattern, char ***out, int *out_count) {
         base = pattern;
     }
 
-    DIR *d = opendir(dir[0] ? dir : ".");
+    DIR* d = opendir(dir[0] ? dir : ".");
     if (!d) {
-        *out = malloc(sizeof(char *));
+        *out = malloc(sizeof(char*));
         (*out)[0] = strdup(pattern);
         *out_count = 1;
         return;
     }
 
     size_t cap = 8;
-    *out = malloc(cap * sizeof(char *));
-    struct dirent *ent;
+    *out = malloc(cap * sizeof(char*));
+    struct dirent* ent;
     while ((ent = readdir(d))) {
         if (ent->d_name[0] == '.' && base[0] != '.')
             continue;
@@ -63,20 +63,20 @@ void glob_expand(const char *pattern, char ***out, int *out_count) {
 
         if ((size_t)*out_count + 1 >= cap) {
             cap *= 2;
-            *out = realloc(*out, cap * sizeof(char *));
+            *out = realloc(*out, cap * sizeof(char*));
         }
         (*out)[(*out_count)++] = strdup(path);
     }
     closedir(d);
 
     if (*out_count == 0) {
-        *out = realloc(*out, sizeof(char *));
+        *out = realloc(*out, sizeof(char*));
         (*out)[0] = strdup(pattern);
         *out_count = 1;
     }
 }
 
-static char *expand_special(Shell *sh, const char *name) {
+static char* expand_special(Shell* sh, const char* name) {
     if (strcmp(name, "?") == 0) {
         char buf[32];
         snprintf(buf, sizeof(buf), "%d", sh->last_status);
@@ -94,16 +94,16 @@ static char *expand_special(Shell *sh, const char *name) {
     }
     if (strcmp(name, "#") == 0)
         return strdup("0");
-    const char *val = var_get(sh, name);
+    const char* val = var_get(sh, name);
     return strdup(val ? val : "");
 }
 
-static char *expand_tilde(Shell *sh, const char *word) {
+static char* expand_tilde(Shell* sh, const char* word) {
     (void)sh;
     if (word[0] != '~') return strdup(word);
-    const char *home = getenv("HOME");
+    const char* home = getenv("HOME");
     if (!home) {
-        struct passwd *pw = getpwuid(getuid());
+        struct passwd* pw = getpwuid(getuid());
         home = pw ? pw->pw_dir : "";
     }
     if (word[1] == '\0' || word[1] == '/')
@@ -111,13 +111,13 @@ static char *expand_tilde(Shell *sh, const char *word) {
     return strdup(word);
 }
 
-char *expand_word(Shell *sh, const char *word, int in_double_quotes) {
+char* expand_word(Shell* sh, const char* word, int in_double_quotes) {
     if (!word) return strdup("");
 
-    char *result = expand_tilde(sh, word);
+    char* result = expand_tilde(sh, word);
     if (strchr(result, '$') == NULL && !in_double_quotes &&
         (strchr(result, '*') || strchr(result, '?'))) {
-        char **globs;
+        char** globs;
         int gc;
         glob_expand(result, &globs, &gc);
         free(result);
@@ -137,10 +137,10 @@ char *expand_word(Shell *sh, const char *word, int in_double_quotes) {
     }
 
     size_t cap = strlen(result) + 1, len = 0;
-    char *out = malloc(cap);
+    char* out = malloc(cap);
     out[0] = '\0';
 
-    const char *p = result;
+    const char* p = result;
     while (*p) {
         if (*p == '$' && !in_double_quotes) {
             p++;
@@ -159,13 +159,16 @@ char *expand_word(Shell *sh, const char *word, int in_double_quotes) {
                     while (isalnum((unsigned char)*p) || *p == '_')
                         name[ni++] = *p++;
             } else {
-                if (len + 2 >= cap) { cap += 2; out = realloc(out, cap); }
+                if (len + 2 >= cap) {
+                    cap += 2;
+                    out = realloc(out, cap);
+                }
                 out[len++] = '$';
                 out[len] = '\0';
                 continue;
             }
             name[ni] = '\0';
-            char *val = expand_special(sh, name);
+            char* val = expand_special(sh, name);
             size_t vlen = strlen(val);
             if (len + vlen + 1 >= cap) {
                 cap = len + vlen + 2;
@@ -178,12 +181,18 @@ char *expand_word(Shell *sh, const char *word, int in_double_quotes) {
         } else if (*p == '\\' && !in_double_quotes) {
             p++;
             if (*p) {
-                if (len + 2 >= cap) { cap += 2; out = realloc(out, cap); }
+                if (len + 2 >= cap) {
+                    cap += 2;
+                    out = realloc(out, cap);
+                }
                 out[len++] = *p++;
                 out[len] = '\0';
             }
         } else {
-            if (len + 2 >= cap) { cap += 2; out = realloc(out, cap); }
+            if (len + 2 >= cap) {
+                cap += 2;
+                out = realloc(out, cap);
+            }
             out[len++] = *p++;
             out[len] = '\0';
         }
@@ -192,18 +201,18 @@ char *expand_word(Shell *sh, const char *word, int in_double_quotes) {
     return out;
 }
 
-char **expand_argv(Shell *sh, char **argv, int argc, int *out_argc) {
+char** expand_argv(Shell* sh, char** argv, int argc, int* out_argc) {
     size_t cap = 16;
-    char **out = malloc(cap * sizeof(char *));
+    char** out = malloc(cap * sizeof(char*));
     int n = 0;
 
     for (int i = 0; i < argc; i++) {
-        char *exp = expand_word(sh, argv[i], 0);
-        char *tok = strtok(exp, " \t");
+        char* exp = expand_word(sh, argv[i], 0);
+        char* tok = strtok(exp, " \t");
         while (tok) {
             if ((size_t)n + 1 >= cap) {
                 cap *= 2;
-                out = realloc(out, cap * sizeof(char *));
+                out = realloc(out, cap * sizeof(char*));
             }
             out[n++] = strdup(tok);
             tok = strtok(NULL, " \t");

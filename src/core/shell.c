@@ -5,7 +5,7 @@
 
 Shell g_shell;
 
-void shell_init(Shell *sh, int interactive) {
+void shell_init(Shell* sh, int interactive) {
     memset(sh, 0, sizeof(*sh));
     sh->interactive = interactive;
     sh->last_status = 0;
@@ -21,7 +21,7 @@ void shell_init(Shell *sh, int interactive) {
     signals_save_terminal(sh);
 }
 
-void shell_destroy(Shell *sh) {
+void shell_destroy(Shell* sh) {
     for (int i = 0; i < sh->history_count; i++)
         free(sh->history[i]);
     vars_destroy(sh);

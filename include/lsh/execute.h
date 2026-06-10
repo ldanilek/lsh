@@ -3,7 +3,7 @@
 
 #include <lsh/ast.h>
 
-int execute_ast(Shell *sh, AstNode *ast);
-int execute_pipeline(Shell *sh, Pipeline *pl);
+int execute_ast(Shell* sh, AstNode* ast);
+int execute_pipeline(Shell* sh, Pipeline* pl);
 
 #endif

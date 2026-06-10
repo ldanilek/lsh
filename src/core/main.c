@@ -5,35 +5,35 @@
 #include <lsh/vars.h>
 #include <lsh/jobs.h>
 
-static int is_assignment(const char *s) {
+static int is_assignment(const char* s) {
     if (!s || !s[0]) return 0;
     if (isdigit((unsigned char)s[0])) return 0;
-    char *eq = strchr(s, '=');
+    char* eq = strchr(s, '=');
     if (!eq || eq == s) return 0;
-    for (const char *p = s; p < eq; p++) {
+    for (const char* p = s; p < eq; p++) {
         if (!isalnum((unsigned char)*p) && *p != '_')
             return 0;
     }
-    for (const char *p = eq + 1; *p; p++) {
+    for (const char* p = eq + 1; *p; p++) {
         if (*p == ';' || *p == '|' || *p == '&')
             return 0;
     }
     return 1;
 }
 
-static int handle_line(Shell *sh, char *line) {
+static int handle_line(Shell* sh, char* line) {
     if (!line || !line[0])
         return 0;
 
-    char *work = strdup(line);
-    char *p = work;
+    char* work = strdup(line);
+    char* p = work;
     while (*p == ' ' || *p == '\t') p++;
 
     char saved[LSH_MAX_LINE];
     int had_assign = 0;
-    char *cmd_start = NULL;
+    char* cmd_start = NULL;
     while (1) {
-        char *tok_start = p;
+        char* tok_start = p;
         while (*p && *p != ' ' && *p != '\t' && *p != ';') p++;
         char saved_ch = *p;
         *p = '\0';
@@ -56,18 +56,18 @@ static int handle_line(Shell *sh, char *line) {
         }
     }
 
-    const char *cmd_line = line;
+    const char* cmd_line = line;
     if (had_assign && cmd_start) {
         strncpy(saved, cmd_start, sizeof(saved) - 1);
         saved[sizeof(saved) - 1] = '\0';
         cmd_line = saved;
     }
 
-    AstNode *ast = parse(cmd_line);
+    AstNode* ast = parse(cmd_line);
     free(work);
 
     if (!ast) {
-        char *err = parse_error();
+        char* err = parse_error();
         if (err && err[0]) {
             fprintf(stderr, "lsh: %s\n", err);
             return 2;
@@ -81,8 +81,8 @@ static int handle_line(Shell *sh, char *line) {
     return status;
 }
 
-static int run_script(Shell *sh, const char *path) {
-    FILE *f = fopen(path, "r");
+static int run_script(Shell* sh, const char* path) {
+    FILE* f = fopen(path, "r");
     if (!f) {
         fprintf(stderr, "lsh: %s: %s\n", path, strerror(errno));
         return 127;
@@ -91,7 +91,7 @@ static int run_script(Shell *sh, const char *path) {
     int status = 0;
     while (fgets(line, sizeof(line), f)) {
         size_t len = strlen(line);
-        while (len > 0 && (line[len-1] == '\n' || line[len-1] == '\r'))
+        while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r'))
             line[--len] = '\0';
         status = handle_line(sh, line);
         if (sh->should_exit)
@@ -101,12 +101,12 @@ static int run_script(Shell *sh, const char *path) {
     return sh->should_exit ? sh->last_status : status;
 }
 
-static void run_interactive(Shell *sh) {
+static void run_interactive(Shell* sh) {
     while (!sh->should_exit) {
-        const char *prompt = var_get(sh, "PS1");
+        const char* prompt = var_get(sh, "PS1");
         if (!prompt) prompt = LSH_PROMPT;
 
-        char *line = input_read_line(sh, prompt);
+        char* line = input_read_line(sh, prompt);
         if (!line)
             break;
 
@@ -118,11 +118,11 @@ static void run_interactive(Shell *sh) {
     }
 }
 
-static void usage(const char *prog) {
+static void usage(const char* prog) {
     fprintf(stderr, "Usage: %s [-c command] [script]\n", prog);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     int interactive = isatty(STDIN_FILENO);
     shell_init(&g_shell, interactive);
 

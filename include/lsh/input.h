@@ -3,7 +3,7 @@
 
 #include <lsh/shell.h>
 
-char *input_read_line(Shell *sh, const char *prompt);
-void history_add(Shell *sh, const char *line);
+char* input_read_line(Shell* sh, const char* prompt);
+void history_add(Shell* sh, const char* line);
 
 #endif

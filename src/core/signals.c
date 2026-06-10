@@ -1,7 +1,7 @@
 #include <lsh/signals.h>
 #include <lsh/jobs.h>
 
-static Shell *g_sh;
+static Shell* g_sh;
 
 static void sigint_handler(int sig) {
     (void)sig;
@@ -17,7 +17,7 @@ static void sigchld_handler(int sig) {
         jobs_reap(g_sh);
 }
 
-void signals_setup(Shell *sh) {
+void signals_setup(Shell* sh) {
     g_sh = sh;
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
@@ -36,23 +36,22 @@ void signals_setup(Shell *sh) {
     sigaction(SIGTTIN, &sa, NULL);
 }
 
-void signals_save_terminal(Shell *sh) {
+void signals_save_terminal(Shell* sh) {
     if (!sh->interactive) return;
     if (tcgetattr(STDIN_FILENO, &sh->shell_termios) == 0)
         sh->shell_termios_saved = 1;
 }
 
-void signals_restore_terminal(Shell *sh) {
+void signals_restore_terminal(Shell* sh) {
     if (sh->shell_termios_saved)
         tcsetattr(STDIN_FILENO, TCSADRAIN, &sh->shell_termios);
 }
 
-void signals_set_foreground(Shell *sh, pid_t pgid) {
+void signals_set_foreground(Shell* sh, pid_t pgid) {
     sh->fg_pgid = pgid;
     if (!sh->interactive || !isatty(STDIN_FILENO)) return;
     pid_t target = pgid > 0 ? pgid : sh->shell_pgid;
-    while (tcsetpgrp(STDIN_FILENO, target) < 0 && errno == EINTR)
-        ;
+    while (tcsetpgrp(STDIN_FILENO, target) < 0 && errno == EINTR);
 }
 
 void signals_reset_for_exec(void) {
@@ -63,13 +62,12 @@ void signals_reset_for_exec(void) {
     sa.sa_flags = 0;
 
     const int sigs[] = {
-        SIGINT, SIGQUIT, SIGTSTP, SIGTTIN, SIGTTOU, SIGCHLD, 0
-    };
+        SIGINT, SIGQUIT, SIGTSTP, SIGTTIN, SIGTTOU, SIGCHLD, 0};
     for (int i = 0; sigs[i]; i++)
         sigaction(sigs[i], &sa, NULL);
 }
 
-void signals_handoff_foreground(Shell *sh, pid_t pgid) {
+void signals_handoff_foreground(Shell* sh, pid_t pgid) {
     if (!sh->interactive || pgid <= 0) return;
     signals_restore_terminal(sh);
     if (isatty(STDIN_FILENO))
@@ -88,12 +86,11 @@ void signals_child_prepare_tty(void) {
     if (!isatty(STDIN_FILENO))
         return;
     pid_t pgrp = getpgrp();
-    while (tcsetpgrp(STDIN_FILENO, pgrp) < 0 && errno == EINTR)
-        ;
+    while (tcsetpgrp(STDIN_FILENO, pgrp) < 0 && errno == EINTR);
     tcflush(STDIN_FILENO, TCIOFLUSH);
 }
 
-void signals_reclaim_foreground(Shell *sh) {
+void signals_reclaim_foreground(Shell* sh) {
     if (!sh->interactive) {
         sh->fg_pgid = 0;
         return;

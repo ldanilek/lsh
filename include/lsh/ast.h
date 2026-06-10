@@ -14,32 +14,32 @@ typedef enum {
 
 typedef struct Redir {
     RedirType type;
-    char *file;
-    struct Redir *next;
+    char* file;
+    struct Redir* next;
 } Redir;
 
 typedef struct Command {
-    char **argv;
+    char** argv;
     int argc;
-    Redir *redirs;
+    Redir* redirs;
     int background;
 } Command;
 
 typedef struct Pipeline {
-    Command *commands;
+    Command* commands;
     int ncommands;
 } Pipeline;
 
 typedef struct AstNode {
     Pipeline pipeline;
     int op; /* 0=none(end), 1=;, 2=&&, 3=|| */
-    struct AstNode *next;
+    struct AstNode* next;
 } AstNode;
 
-void redir_free(Redir *r);
-void command_free(Command *cmd);
-void pipeline_free(Pipeline *pl);
-void ast_free(AstNode *ast);
-AstNode *ast_last(AstNode *ast);
+void redir_free(Redir* r);
+void command_free(Command* cmd);
+void pipeline_free(Pipeline* pl);
+void ast_free(AstNode* ast);
+AstNode* ast_last(AstNode* ast);
 
 #endif

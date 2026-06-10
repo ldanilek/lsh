@@ -21,16 +21,16 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-#define LSH_MAX_LINE   4096
-#define LSH_MAX_ARGS   256
-#define LSH_MAX_JOBS   64
-#define LSH_MAX_VARS   512
+#define LSH_MAX_LINE 4096
+#define LSH_MAX_ARGS 256
+#define LSH_MAX_JOBS 64
+#define LSH_MAX_VARS 512
 #define LSH_MAX_HISTORY 256
-#define LSH_PROMPT     "lsh$ "
+#define LSH_PROMPT "lsh$ "
 
 typedef struct Var {
-    char *name;
-    char *value;
+    char* name;
+    char* value;
     int exported;
 } Var;
 
@@ -39,7 +39,7 @@ typedef struct Job {
     pid_t pgid;
     pid_t pids[LSH_MAX_ARGS];
     int npids;
-    char *cmd;
+    char* cmd;
     int running; /* 1=running, 0=done */
     int stopped;
 } Job;
@@ -58,7 +58,7 @@ typedef struct Shell {
     Job jobs[LSH_MAX_JOBS];
     int njobs;
 
-    char *history[LSH_MAX_HISTORY];
+    char* history[LSH_MAX_HISTORY];
     int history_count;
     int history_pos;
 
@@ -70,7 +70,7 @@ typedef struct Shell {
 
 extern Shell g_shell;
 
-void shell_init(Shell *sh, int interactive);
-void shell_destroy(Shell *sh);
+void shell_init(Shell* sh, int interactive);
+void shell_destroy(Shell* sh);
 
 #endif

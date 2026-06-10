@@ -24,17 +24,17 @@ typedef enum {
 
 typedef struct Token {
     TokenType type;
-    char *value;
+    char* value;
 } Token;
 
 typedef struct Lexer {
-    const char *input;
+    const char* input;
     size_t pos;
     Token current;
 } Lexer;
 
-void lexer_init(Lexer *lx, const char *input);
-void lexer_next(Lexer *lx);
-void token_free(Token *tok);
+void lexer_init(Lexer* lx, const char* input);
+void lexer_next(Lexer* lx);
+void token_free(Token* tok);
 
 #endif

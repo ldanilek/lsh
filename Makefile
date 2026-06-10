@@ -20,7 +20,10 @@ SRCS = src/core/main.c \
 
 OBJS = $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 
-.PHONY: all clean test
+CLANG_FORMAT ?= clang-format
+FMT_FILES := $(shell find include src -type f \( -name '*.c' -o -name '*.h' \))
+
+.PHONY: all clean test lint
 
 all: lsh
 
@@ -33,6 +36,10 @@ $(BUILD_DIR)/%.o: src/%.c
 
 test: lsh
 	./tests/run_tests.sh
+
+lint:
+	@test -n "$(FMT_FILES)" || (echo "no C sources found" && exit 1)
+	$(CLANG_FORMAT) --dry-run --Werror $(FMT_FILES)
 
 clean:
 	rm -rf lsh build
