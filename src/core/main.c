@@ -58,8 +58,7 @@ static int handle_line(Shell* sh, char* line) {
 
     const char* cmd_line = line;
     if (had_assign && cmd_start) {
-        strncpy(saved, cmd_start, sizeof(saved) - 1);
-        saved[sizeof(saved) - 1] = '\0';
+        snprintf(saved, sizeof(saved), "%s", cmd_start);
         cmd_line = saved;
     }
 

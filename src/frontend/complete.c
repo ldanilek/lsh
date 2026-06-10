@@ -59,8 +59,7 @@ static void gather_commands(const char* prefix, CompletionList* out) {
     if (!path_env) return;
 
     char path_copy[4096];
-    strncpy(path_copy, path_env, sizeof(path_copy) - 1);
-    path_copy[sizeof(path_copy) - 1] = '\0';
+    snprintf(path_copy, sizeof(path_copy), "%s", path_env);
 
     char* dir = strtok(path_copy, ":");
     while (dir) {
@@ -83,8 +82,7 @@ static void gather_commands(const char* prefix, CompletionList* out) {
 
 static void expand_tilde(const char* word, char* out, size_t outsz) {
     if (word[0] != '~') {
-        strncpy(out, word, outsz - 1);
-        out[outsz - 1] = '\0';
+        snprintf(out, outsz, "%s", word);
         return;
     }
     const char* home = getenv("HOME");
@@ -95,8 +93,7 @@ static void expand_tilde(const char* word, char* out, size_t outsz) {
     if (word[1] == '\0' || word[1] == '/') {
         snprintf(out, outsz, "%s%s", home ? home : "", word + 1);
     } else {
-        strncpy(out, word, outsz - 1);
-        out[outsz - 1] = '\0';
+        snprintf(out, outsz, "%s", word);
     }
 }
 
@@ -109,8 +106,7 @@ static void gather_paths(const char* word, CompletionList* out) {
     const char* slash = strrchr(expanded, '/');
     if (!slash) {
         strcpy(dir, ".");
-        strncpy(base, expanded, sizeof(base) - 1);
-        base[sizeof(base) - 1] = '\0';
+        snprintf(base, sizeof(base), "%s", expanded);
     } else {
         size_t dlen = (size_t)(slash - expanded);
         if (dlen == 0) {
@@ -120,13 +116,11 @@ static void gather_paths(const char* word, CompletionList* out) {
             memcpy(dir, expanded, dlen);
             dir[dlen] = '\0';
         }
-        strncpy(base, slash + 1, sizeof(base) - 1);
-        base[sizeof(base) - 1] = '\0';
+        snprintf(base, sizeof(base), "%s", slash + 1);
     }
 
     int dir_trailing = slash && slash[1] == '\0';
     if (dir_trailing) {
-        strncpy(base, "", sizeof(base));
         base[0] = '\0';
     }
 
