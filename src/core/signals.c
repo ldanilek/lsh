@@ -8,7 +8,7 @@ static void sigint_handler(int sig) {
     if (g_sh && g_sh->fg_pgid > 0)
         kill(-g_sh->fg_pgid, SIGINT);
     else if (g_sh && g_sh->interactive)
-        write(STDOUT_FILENO, "\n", 1);
+        (void)write(STDOUT_FILENO, "\n", 1);
 }
 
 static void sigchld_handler(int sig) {

@@ -2,6 +2,11 @@
 #include <lsh/complete.h>
 #include <lsh/signals.h>
 
+static void out_bytes(const void* buf, size_t len) {
+    ssize_t n = write(STDOUT_FILENO, buf, len);
+    (void)n;
+}
+
 static void enable_raw_mode(Shell* sh) {
     if (!sh->interactive || !sh->shell_termios_saved) return;
     struct termios raw = sh->shell_termios;
@@ -172,12 +177,12 @@ static void buf_replace_word(char* buf, int* len, int* pos, int ws, int we,
 static void refresh_line(const char* prompt, char* buf, int len, int pos) {
     char seq[64];
     snprintf(seq, sizeof(seq), "\r%s%s", prompt, buf);
-    write(STDOUT_FILENO, seq, strlen(seq));
+    out_bytes(seq, strlen(seq));
     snprintf(seq, sizeof(seq), "\033[K");
-    write(STDOUT_FILENO, seq, strlen(seq));
+    out_bytes(seq, strlen(seq));
     if (pos < len) {
         snprintf(seq, sizeof(seq), "\033[%dD", len - pos);
-        write(STDOUT_FILENO, seq, strlen(seq));
+        out_bytes(seq, strlen(seq));
     }
 }
 
@@ -188,7 +193,7 @@ static char* read_line_interactive(Shell* sh, const char* prompt) {
     int hist_idx = sh->history_count;
 
     enable_raw_mode(sh);
-    write(STDOUT_FILENO, prompt, strlen(prompt));
+    out_bytes(prompt, strlen(prompt));
 
     while (1) {
         char c;
@@ -198,7 +203,7 @@ static char* read_line_interactive(Shell* sh, const char* prompt) {
         }
 
         if (c == '\n' || c == '\r') {
-            write(STDOUT_FILENO, "\n", 1);
+            out_bytes("\n", 1);
             disable_raw_mode(sh);
             return strdup(buf);
         }
@@ -211,7 +216,7 @@ static char* read_line_interactive(Shell* sh, const char* prompt) {
 
         if (c == 4) { /* Ctrl-D */
             if (len == 0) {
-                write(STDOUT_FILENO, "\n", 1);
+                out_bytes("\n", 1);
                 disable_raw_mode(sh);
                 return NULL;
             }
@@ -264,7 +269,7 @@ static char* read_line_interactive(Shell* sh, const char* prompt) {
             completion_gather(sh, buf, ws, we, &matches);
 
             if (matches.count == 0) {
-                write(STDOUT_FILENO, "\a", 1);
+                out_bytes("\a", 1);
             } else if (matches.count == 1) {
                 buf_replace_word(buf, &len, &pos, ws, we, matches.items[0]);
                 refresh_line(prompt, buf, len, pos);
@@ -275,13 +280,12 @@ static char* read_line_interactive(Shell* sh, const char* prompt) {
                     buf_replace_word(buf, &len, &pos, ws, we, common);
                     refresh_line(prompt, buf, len, pos);
                 } else {
-                    write(STDOUT_FILENO, "\n", 1);
+                    out_bytes("\n", 1);
                     for (int i = 0; i < matches.count; i++) {
-                        write(STDOUT_FILENO, matches.items[i],
-                              strlen(matches.items[i]));
-                        write(STDOUT_FILENO, "  ", 2);
+                        out_bytes(matches.items[i], strlen(matches.items[i]));
+                        out_bytes("  ", 2);
                     }
-                    write(STDOUT_FILENO, "\n", 1);
+                    out_bytes("\n", 1);
                     refresh_line(prompt, buf, len, pos);
                 }
                 free(common);
